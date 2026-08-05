@@ -17,9 +17,9 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt -o all.txt
 
-      - name: Keep first 200 configs
-        run: |
-          head -n 200 all.txt > Sub.txt
+- name: Keep 200 random configs
+  run: |
+    shuf all.txt | head -n 200 > Sub.txt
 
       - name: Commit changes
         run: |
