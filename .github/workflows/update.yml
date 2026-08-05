@@ -1,5 +1,8 @@
 name: Update Subscription
 
+permissions:
+  contents: write
+
 on:
   schedule:
     - cron: '0 * * * *'
@@ -10,21 +13,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Download subscription
         run: |
-          curl -L https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt -o all.txt
+          curl -fL https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt -o all.txt
 
-- name: Keep 200 random configs
-  run: |
-    shuf all.txt | head -n 200 > Sub.txt
+      - name: Keep 200 random configs
+        run: |
+          shuf all.txt | head -n 200 > Sub.txt
 
-      - name: Commit changes
+      - name: Commit and push changes
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+
           git add Sub.txt
-          git commit -m "Update Sub" || echo "No changes"
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Update Sub"
           git push
