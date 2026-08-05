@@ -3,7 +3,7 @@ name: Update Subscription
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 * * * *"
+    - cron: '0 * * * *'
 
 permissions:
   contents: write
@@ -13,21 +13,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Download subscription
-        run: |
-          curl -fL "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt" -o all.txt
+        run: curl -fL https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt -o all.txt
 
       - name: Keep 200 random configs
-        run: |
-          shuf all.txt | head -n 200 > Sub.txt
+        run: shuf all.txt | head -n 200 > Sub.txt
 
       - name: Commit changes
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add Sub.txt
-          git diff --cached --quiet && exit 0
-          git commit -m "Update Sub"
+          git diff --cached --quiet || git commit -m "Update Sub"
           git push
