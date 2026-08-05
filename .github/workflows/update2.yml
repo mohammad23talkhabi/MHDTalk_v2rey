@@ -1,4 +1,4 @@
-name: SUBTEXT
+name: SUBTEXT2
 
 on:
   workflow_dispatch:
@@ -22,24 +22,61 @@ jobs:
       - name: Download subscription
         run: |
           curl -fL "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt" -o all.txt
+          echo "📥 دانلود شد، تعداد خطوط: $(wc -l < all.txt)"
 
-      - name: Detect country for each config
+      - name: Detect country and add as remark
         run: |
           > final.txt
+          COUNTER=0
           while IFS= read -r line; do
-            ip=$(echo "$line" | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -1)
-            if [ -n "$ip" ]; then
-              country=$(curl -s "http://ip-api.com/json/$ip?fields=country" | jq -r '.country // "Unknown"')
-              echo "[$country] $line" >> final.txt
-              sleep 0.5
-            else
-              echo "$line" >> final.txt
+            # اگر خط خالی بود رد کن
+            [ -z "$line" ] && continue
+            
+            # تلاش برای استخراج IP با روش‌های مختلف
+            # روش اول: برای لینک‌های vmess/vless که IP بعد از @ است
+            ip=$(echo "$line" | grep -oE '@[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | sed 's/@//' | head -1)
+            
+            # اگر IP پیدا نشد، روش دوم: جستجوی مستقیم
+            if [ -z "$ip" ]; then
+              ip=$(echo "$line" | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -1)
             fi
+            
+            # اگر IP داشت، کشور رو بگیر
+            if [ -n "$ip" ]; then
+              # سعی کن کشور رو از API بگیر
+              country=$(curl -s "http://ip-api.com/json/$ip?fields=country" | jq -r '.country // "Unknown"')
+              
+              # اگه کشور "Unknown" یا null بود، از روش دوم استفاده کن (با ipinfo.io)
+              if [ "$country" = "Unknown" ] || [ "$country" = "null" ]; then
+                country=$(curl -s "https://ipinfo.io/$ip/country" 2>/dev/null)
+                [ -z "$country" ] && country="Unknown"
+              fi
+              
+              # اگر لینک قبلاً # داشت، اون رو پاک کن و دوباره بذار
+              clean_line=$(echo "$line" | sed 's/#.*//')
+              echo "${clean_line}#${country}" >> final.txt
+              COUNTER=$((COUNTER+1))
+            else
+              # اگر IP پیدا نشد، همون خط رو با Unknown بذار
+              echo "${line}#Unknown" >> final.txt
+            fi
+            
+            # یه تأخیر کوچیک برای جلوگیری از محدودیت API
+            sleep 0.3
           done < all.txt
+          
+          echo "✅ تعداد کانفیگ‌های پردازش‌شده: $COUNTER"
           mv final.txt all.txt
 
       - name: Keep 200 random configs
-        run: shuf all.txt | head -n 200 > SUBTEXT2
+        run: |
+          shuf all.txt | head -n 200 > SUBTEXT2
+          echo "📄 تعداد نهایی: $(wc -l < SUBTEXT2)"
+
+      - name: Show sample of output (for debugging)
+        run: |
+          echo "نمونه‌ای از ۳ خط اول فایل نهایی:"
+          head -n 3 SUBTEXT2
 
       - name: Commit and push
         run: |
