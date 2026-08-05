@@ -17,8 +17,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download subscription
-        run: |
-          curl -fL https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt -o all.txt
+            run: |
+              curl -fL https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt -o all.txt
 
       - name: Keep 200 random configs
         run: |
