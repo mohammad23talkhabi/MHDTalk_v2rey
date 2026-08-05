@@ -1,0 +1,30 @@
+name: Update Subscription
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download subscription
+        run: |
+          curl -L https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt -o all.txt
+
+      - name: Keep first 200 configs
+        run: |
+          head -n 200 all.txt > Sub.txt
+
+      - name: Commit changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add Sub.txt
+          git commit -m "Update Sub" || echo "No changes"
+          git push
