@@ -24,17 +24,17 @@ jobs:
           curl -fL "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt" -o all.txt
           echo "📥 تعداد کل: $(wc -l < all.txt)"
 
-      - name: Pick 400 random configs
+      - name: Pick 300 random configs
         run: |
-          shuf all.txt | head -n 400 > random_400.txt
-          echo "📄 تعداد رندوم: $(wc -l < random_400.txt)"
+          shuf all.txt | head -n 300 > random_300.txt
+          echo "📄 تعداد رندوم: $(wc -l < random_300.txt)"
 
       - name: Detect FULL country name (not code)
         run: |
           set +e
           
-          # استخراج IP از ۴۰۰ تا
-          grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' random_400.txt | sort -u > unique_ips.txt
+          # استخراج IP از ۳۰۰ تا
+          grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' random_300.txt | sort -u > unique_ips.txt
           echo "🌐 تعداد IP یکتا: $(wc -l < unique_ips.txt)"
           
           > country_map.txt
@@ -46,7 +46,6 @@ jobs:
                 -H "Content-Type: application/json" \
                 -d "$json")
               
-              # اینجا به جای countryCode از country استفاده میکنیم → اسم کامل
               if echo "$response" | jq -e . >/dev/null 2>&1; then
                 echo "$response" | jq -r '.[] | "\(.query)|\(.country // "Unknown")"' >> country_map.txt
               else
@@ -68,7 +67,6 @@ jobs:
               [ -z "$country" ] && country="Unknown"
             fi
             
-            # vmess
             if [[ "$line" == vmess://* ]]; then
               encoded=$(echo "$line" | sed 's/vmess:\/\///')
               decoded=$(echo "$encoded" | base64 -d 2>/dev/null || echo '')
@@ -86,10 +84,10 @@ jobs:
                 echo "${line}#${country}" >> final.txt
               fi
             fi
-          done < random_400.txt
+          done < random_300.txt
           
           mv final.txt SUBTEXT2
-          rm -f unique_ips.txt country_map.txt random_400.txt
+          rm -f unique_ips.txt country_map.txt random_300.txt
           
           echo "✅ فایل نهایی با $(wc -l < SUBTEXT2) کانفیگ"
           echo "📋 نمونه:"
