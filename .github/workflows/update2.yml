@@ -21,7 +21,7 @@ jobs:
 
       - name: Download subscription
         run: |
-          curl -fL "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/refs/heads/main/subscriptions/v2ray/all_sub.txt" -o all.txt
+          curl -fL "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/All_Configs_Sub.txt?utm_source=chatgpt.com" -o all.txt
           echo "📥 تعداد کل: $(wc -l < all.txt)"
 
       - name: Pick 300 random configs
